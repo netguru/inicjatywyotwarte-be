@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+INSTANCE_NAME="quarantinehelper"
+
+cd /opt/codedeploy-agent/deployment-root/${DEPLOYMENT_GROUP_ID}/${DEPLOYMENT_ID}/deployment-archive
+
+set -a
+source ./codedeploy-scripts/parameters
+set +a
+
+aws s3 cp s3://hackcrisis-production-app-bucket/shared/secrets.env ./secrets-prod.env
+
+for envvar in $(cat ./secrets-prod.env); do
+  export $envvar;
+done
+
+$(aws ecr get-login --region=eu-central-1 --no-include-email)
+
+COMPOSE="docker-compose -p ${INSTANCE_NAME} -f ./docker/production/docker-compose-production.yml"
+${COMPOSE} build
+${COMPOSE} run --rm web bundle exec rails db:migrate
+${COMPOSE} up -d
+
+# Remove unused data, do not prompt for confirmation
+docker image prune -f

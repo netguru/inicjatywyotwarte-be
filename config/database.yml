@@ -1,0 +1,27 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("DB_POOL") { 5 } %>
+
+development:
+  <<: *default
+  database: quarantine_helper_be_development
+
+test:
+  <<: *default
+  host: localhost
+  port: 5432
+  database: quarantine_helper_be_test
+  username: postgres
+  password: ''
+
+staging:
+  <<: *default
+  database: quarantine_helper_be_staging
+  url: <%= ENV['DATABASE_URL'] %>
+
+production:
+  <<: *default
+  database: quarantine_helper_be_production
+  username: quarantine_helper_be
+  password: <%= ENV['QUARANTINE_HELPER_BE_DATABASE_PASSWORD'] %>

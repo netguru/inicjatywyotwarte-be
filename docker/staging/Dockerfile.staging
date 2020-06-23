@@ -1,0 +1,22 @@
+FROM ruby:2.6.5-alpine3.11
+
+ENV APP_HOME /app
+ENV RAILS_ENV staging
+ENV RAILS_SERVE_STATIC_FILES true
+
+RUN apk add --no-cache build-base dumb-init tzdata nodejs yarn postgresql-dev git xz-dev
+
+# upgrade libraries with known vulnerabilities
+RUN apk add --no-cache -u libxslt
+
+WORKDIR /app
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs=8 --retry=3 --without development test --deployment
+
+## Add rest of code
+ADD . $APP_HOME/
+
+RUN rm -rf /tmp/* /var/tmp/*
+
+RUN mkdir -p /app/tmp/pids

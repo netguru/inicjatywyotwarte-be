@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -u
+
+INTERVAL=45
+CHECK=1
+CHECKS_NUM=5
+URL="http://0.0.0.0:80/health"
+
+while [ ${CHECK} -le ${CHECKS_NUM} ]; do
+  CLI_HEALTH_CHECK=$(curl -w "%{http_code}" -o /dev/null -s ${URL})
+  if [ ${CLI_HEALTH_CHECK} -eq 200 ]; then
+    echo "Service is responding at ${URL} with HTTP code 200"
+    exit 0
+  else
+    echo "[check ${CHECK}/${CHECKS_NUM}] Service is NOT responding with HTTP code 200 at ${URL}"
+    if [ ${CHECK} -eq ${CHECKS_NUM} ]; then
+        exit 1
+    fi
+    let "CHECK=${CHECK} + 1"
+    echo "Waiting ${INTERVAL}s..."
+    sleep ${INTERVAL}
+ fi
+done
+
+exit 1

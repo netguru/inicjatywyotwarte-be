@@ -1,0 +1,36 @@
+AllCops:
+  TargetRubyVersion: 2.6.5
+  Exclude:
+    - 'bin/*'
+    - 'db/schema.rb'
+    - 'db/migrate/*'
+    - 'vendor/**/*'
+
+Layout/LineLength:
+  Max: 140
+  Exclude:
+    - 'config/initializers/*'
+Style/Documentation:
+  Enabled: false
+Metrics/BlockLength:
+  Exclude:
+    - 'config/environments/*'
+    - 'app/admin/*'
+  ExcludedMethods:
+    - 'show'
+    - 'attributes_table'
+    - 'it'
+    - 'describe'
+    - 'let'
+    - 'new'
+    - 'migration'
+    - 'change'
+    - 'shared_examples'
+    - 'it_behaves_like'
+    - 'context'
+Style/HashEachMethods:
+  Enabled: false
+Style/HashTransformKeys:
+  Enabled: true
+Style/HashTransformValues:
+  Enabled: true

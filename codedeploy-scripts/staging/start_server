@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+INSTANCE_NAME="quarantinehelper"
+
+cd /opt/codedeploy-agent/deployment-root/${DEPLOYMENT_GROUP_ID}/${DEPLOYMENT_ID}/deployment-archive
+set -a
+source ./codedeploy-scripts/parameters
+set +a
+
+REGION=$(curl -s ${REGION_FETCH_URL} | jq -r ".region")
+VARS=$(aws --region $REGION ssm get-parameters-by-path --recursive --path /${ENV_PATH}/${INSTANCE_NAME}/staging --with-decryption | jq -r '.Parameters | .[] | .Name + "=" + .Value' | sed -e s#/${ENV_PATH}/${INSTANCE_NAME}/staging/##g)
+
+for envvar in ${VARS}; do
+  export $envvar;
+done
+
+COMPOSE="docker-compose -p ${INSTANCE_NAME} -f ./docker/staging/docker-compose-staging.yml"
+${COMPOSE} build
+${COMPOSE} run --rm web bundle exec rails db:migrate
+${COMPOSE} up -d
+# Remove unused data, do not prompt for confirmation
+docker image prune -f

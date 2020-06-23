@@ -1,0 +1,234 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.16
+  aws-code-deploy: circleci/aws-code-deploy@0.0.9
+  aws-s3: circleci/aws-s3@1.0.15
+  aws-ecr: circleci/aws-ecr@6.8.2
+
+executors:
+  ruby_machine:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/ruby:2.6.5-node
+        environment:
+          BUNDLE_PATH: vendor/bundle
+          RACK_ENV: test
+          RAILS_ENV: test
+      - image: circleci/postgres:11.4-alpine
+        environment:
+          - POSTGRES_DB: quarantine_helper_be_test
+          - POSTGRES_USER: postgres
+          - POSTGRES_PASSWORD: ''
+
+jobs:
+  checkout_code:
+    executor: ruby_machine
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - .
+
+  build_rails_dependencies:
+    executor: ruby_machine
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - restore_cache:
+          keys:
+            - gems_v1-{{ checksum "Gemfile.lock" }}
+            # fallback to using the latest cache if no exact match is found
+            - gems_v1-
+      - run:
+          name: Bundle install
+          command: bundle install --deployment --jobs=4 --retry=3
+      - save_cache:
+          key: gems_v1-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - vendor/bundle
+
+  build_production:
+    executor: ruby_machine
+    steps:
+      - aws-ecr/build-and-push-image:
+          account-url: PROD_AWS_ECR_ACCOUNT_URL
+          aws-access-key-id: PROD_AWS_ACCESS_KEY_ID
+          aws-secret-access-key: PROD_AWS_SECRET_ACCESS_KEY
+          region: PROD_AWS_DEFAULT_REGION
+          repo: ecr-hackcrisis-production
+          tag: ${CIRCLE_SHA1}
+          setup-remote-docker: true
+          dockerfile: docker/production/Dockerfile.production
+
+  run_audits:
+    executor: ruby_machine
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Bundle config
+          command: bundle config --local path ~/repo/vendor/bundle
+      - run:
+          name: Run bundle audit update
+          command: bundle exec bundle-audit update
+      - run:
+          name: Run bundle audit
+          command: bundle exec bundle-audit check
+      - run:
+          name: Run brakeman
+          command: bundle exec brakeman -f plain -z --report-direct -w3
+      - run:
+          name: Run rubocop
+          command: bundle exec rubocop -f progress -f html --out rubocop.html
+          when: always
+      - store_artifacts:
+          path: rubocop.html
+          destination: /rubocop.html
+
+  run_tests:
+    executor: ruby_machine
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Bundle config
+          command: bundle config --local path ~/repo/vendor/bundle
+      - run:
+          name: Create database
+          command: bin/rails db:schema:load --trace
+      - run:
+          name: Running tests
+          command: bundle exec rspec --format progress --format RspecJunitFormatter --out test_results/rspec/results.xml
+      - store_test_results:
+          path: test_results
+      - store_artifacts:
+          path: coverage
+          destination: /coverage
+
+  run_fixtures_check:
+    executor: ruby_machine
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Bundle config
+          command: bundle config --local path ~/repo/vendor/bundle
+      - run:
+          name: Verify that database reset is working
+          command: bin/rails db:reset
+
+  deploy:
+    executor: aws-cli/default
+    parameters:
+      env:
+        type: string
+        default: ""
+      s3_bucket_name:
+        type: env_var_name
+      app_name:
+        type: env_var_name
+      dep_group_name:
+        type: env_var_name
+      aws_key_id:
+        type: env_var_name
+      aws_secret_key:
+        type: env_var_name
+      aws_region:
+        type: env_var_name
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          command: |
+            if [ ! -f ./codedeploy-scripts/parameters ]
+            then
+              touch ./codedeploy-scripts/parameters
+            fi
+            echo IMAGE=${PROD_AWS_ECR_ACCOUNT_URL}/ecr-hackcrisis-production:${CIRCLE_SHA1} >> ./codedeploy-scripts/parameters
+            echo ENV_PATH=${ENV_PATH} >> ./codedeploy-scripts/parameters
+            echo REGION_FETCH_URL=${REGION_FETCH_URL} >> ./codedeploy-scripts/parameters
+      - run:
+          name: Use proper appspec.yml file
+          command: mv appspec.yml.<< parameters.env >> appspec.yml
+      - attach_workspace:
+          at: ~/repo
+      - aws-cli/install
+      - aws-cli/setup:
+          aws-access-key-id: << parameters.aws_key_id >>
+          aws-secret-access-key: << parameters.aws_secret_key >>
+          aws-region: << parameters.aws_region >>
+      - aws-code-deploy/push-bundle:
+          application-name: ${<< parameters.app_name >>}
+          bundle-bucket: ${<<parameters.s3_bucket_name >>}
+          bundle-key: codedeploy/${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BUILD_NUM}
+      - aws-code-deploy/deploy-bundle:
+          application-name: ${<< parameters.app_name >>}
+          deployment-group: ${<< parameters.dep_group_name >>}
+          bundle-bucket: ${<< parameters.s3_bucket_name >>}
+          bundle-key: codedeploy/${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BUILD_NUM}
+
+workflows:
+  build_test_deploy:
+    jobs:
+      - checkout_code
+      - build_rails_dependencies:
+          requires:
+            - checkout_code
+      - run_audits:
+          requires:
+            - build_rails_dependencies
+      - run_tests:
+          requires:
+            - build_rails_dependencies
+      - run_fixtures_check:
+          requires:
+            - build_rails_dependencies
+      - deploy:
+          name: "Deploy to staging"
+          env: staging
+          s3_bucket_name: STAGING_AWS_S3_BUCKET_NAME
+          app_name: STAGING_APP_NAME
+          dep_group_name: STAGING_DEP_GROUP_NAME
+          aws_key_id: STAGING_AWS_ACCESS_KEY_ID
+          aws_secret_key: STAGING_AWS_SECRET_ACCESS_KEY
+          aws_region: STAGING_AWS_DEFAULT_REGION
+          requires:
+            - run_audits
+            - run_tests
+            - run_fixtures_check
+          filters:
+            branches:
+              only: master
+      - build_production:
+          filters:
+            branches:
+              only: production
+      - deploy:
+          name: "Deploy to production"
+          env: production
+          s3_bucket_name: PROD_AWS_S3_BUCKET_NAME
+          app_name: PROD_APP_NAME
+          dep_group_name: PROD_DEP_GROUP_NAME
+          aws_key_id: PROD_AWS_ACCESS_KEY_ID
+          aws_secret_key: PROD_AWS_SECRET_ACCESS_KEY
+          aws_region: PROD_AWS_DEFAULT_REGION
+          requires:
+            - run_audits
+            - run_tests
+            - run_fixtures_check
+            - build_production
+          filters:
+            branches:
+              only: production

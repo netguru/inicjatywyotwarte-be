@@ -1,0 +1,27 @@
+version: 0.0
+os: linux
+#
+# The following section allows one to copy data using CodeDeploy agent (no external scripts required)
+# files:
+#   - source: /index.html
+#     destination: /var/www/html/
+
+# Initial deployment (due to installing dependencies etc.) can take more than 5 minutes
+# There is no naming convention for dirs/scripts, the 'scripts/some.sh' is just an example path that must exist in the dir tree.
+hooks:
+  BeforeInstall:
+    - location: codedeploy-scripts/install_dependencies
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: codedeploy-scripts/staging/start_server
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: codedeploy-scripts/staging/stop_server
+      timeout: 300
+      runas: root
+  ValidateService:
+    - location: codedeploy-scripts/validate_service
+      timeout: 300
+      runas: root

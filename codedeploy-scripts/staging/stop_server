@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+set -u
+set -x
+
+INSTANCE_NAME="quarantinehelper"
+
+DIR=$(cat /opt/codedeploy-agent/deployment-root/deployment-instructions/${DEPLOYMENT_GROUP_ID}_most_recent_install)
+cd $DIR/deployment-archive
+COMPOSE="docker-compose -p ${INSTANCE_NAME} -f ./docker/staging/docker-compose-staging.yml"
+${COMPOSE} down | true
