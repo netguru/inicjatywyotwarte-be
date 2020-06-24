@@ -16,13 +16,11 @@ The application is an aggregator of initiatives useful during COVID-19 times and
 - PostgreSQL 11.4
 - Redis
 
-## Code of conduct
-- [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md)
+## How to contribute to Inicjatywy Otwarte?
+We are an open source project and we work in a similar way to other such projects. You can write up an issue, create a pull request and just talk to us about things we could improve. For more information you can have a look at our [Contributing Guide](CONTRIBUTING.md). 
 
-## Contributing
-How to contribute to inicjatywyotwarte?
+**Note:** if you have noticed any security issue please contact us directly at inicjatywyotwarte@netguru.com.
 
-- [Contributing guide](CONTRIBUTING.md)
 
 ## Seeds
 #### Active Admin accounts:
@@ -41,6 +39,9 @@ How to contribute to inicjatywyotwarte?
 `/swagger` or `/` Swagger API docs
 
 `/admin` Active Admin Panel
+
+## Code of conduct
+- [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## License
 - [License](LICENSE)
