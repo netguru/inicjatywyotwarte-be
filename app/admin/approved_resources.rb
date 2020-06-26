@@ -22,8 +22,6 @@ ActiveAdmin.register Resource, as: 'approved_resources' do
     after_action :regenerate_resources_json, only: %i[create update disapprove]
 
     def regenerate_resources_json
-      return if Rails.env.development?
-
       UploadResourcesToStorageWorker.perform_async
       UploadLocationsToStorageWorker.perform_async
     end
