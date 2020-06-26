@@ -16,6 +16,25 @@ The application is an aggregator of initiatives useful during COVID-19 times and
 - PostgreSQL 11.4
 - Redis
 
+We're pushing JSONs to AWS s3 bucket. In development environment we're using `localstack` that emulates AWS services.
+
+Localstack is configured in FE repository, clone it and navigate to it's main directory.
+
+You need to have docker-compose installed, then run:
+
+`docker-compose -f localstack-docker-compose.yml up`
+
+or
+
+`docker-compose -f localstack-docker-compose.yml up -d` to run in background.
+
+If service is running, application should properly push JSONs to faked s3.
+
+You can use localstack with AWS CLI or SDK. You just need to add `--endpoint-url=http://localhost:4572` option.
+
+Example:
+`aws --endpoint-url=http://localhost:4572  s3 ls s3://local-bucket/`
+
 ## How to contribute to Inicjatywy Otwarte?
 We are an open source project and we work in a similar way to other such projects. You can write up an issue, create a pull request and just talk to us about things we could improve. For more information you can have a look at our [Contributing Guide](CONTRIBUTING.md). 
 
