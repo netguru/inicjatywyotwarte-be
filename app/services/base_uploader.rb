@@ -21,11 +21,23 @@ class BaseUploader
 
   def aws_s3_object
     @aws_s3_object ||= aws_s3_resource
-                       .bucket(Rails.application.credentials.dig(:aws, :bucket))
+                       .bucket(Rails.env.development? ? 'local-bucket' : Rails.application.credentials.dig(:aws, :bucket))
                        .object(object_key)
   end
 
   def aws_s3_resource
-    @aws_s3_resource ||= Aws::S3::Resource.new(region: Rails.application.credentials.dig(:aws, :region))
+    @aws_s3_resource ||= Aws::S3::Resource.new(options)
+  end
+
+  def options
+    options = { region: Rails.application.credentials.dig(:aws, :region) }
+    if Rails.env.development?
+      options = {
+        region: 'eu-central-1',
+        endpoint: 'http://localhost:4572',
+        force_path_style: true
+      }
+    end
+    options
   end
 end
