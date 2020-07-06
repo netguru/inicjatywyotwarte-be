@@ -27,7 +27,7 @@ services:
       driver: awslogs
       options:
         awslogs-region: eu-central-1
-        awslogs-group: loggroup-production
+        awslogs-group: backend-production
     command: bundle exec puma -C config/puma.rb
   sidekiq:
     <<: *common-settings
