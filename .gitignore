@@ -19,13 +19,17 @@
 .byebug_history
 
 # Ignore master key for decrypting credentials and more.
+
 /config/master.key
+/config/credentials.yml.enc
+
+/config/credentials/production.key
+/config/credentials/production.yml.enc
+
 /config/credentials/staging.key
+/config/credentials/staging.yml.enc
 
 # Ignore public, as it is built on deploy
 # Place files for /public in /client/public
 /public
 .DS_Store
-/config/credentials/production.key
-
-/config/credentials/development.key

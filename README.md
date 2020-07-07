@@ -16,6 +16,14 @@ The application is an aggregator of initiatives useful during COVID-19 times and
 - PostgreSQL 11.4
 - Redis
 
+## Setup
+`EDITOR="vim" rails credentials:edit` - rails will generate yours `master.key` and `credentials.yml.enc`
+
+`rails s` to run server
+
+`bundle exec sidekiq` to start sidekiq
+
+
 We're pushing JSONs to AWS s3 bucket. In development environment we're using `localstack` that emulates AWS services.
 
 Localstack is configured in FE repository, clone it and navigate to it's main directory.
