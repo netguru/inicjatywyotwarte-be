@@ -163,14 +163,14 @@ jobs:
           command: |
             if [ ! -f ./config/credentials/production.yml.enc ]
             then
-              touch ./config/credentials/production.yml.enc
+              mkdir ./config/credentials && touch ./config/credentials/production.yml.enc
             fi
             echo ${RAILS_PROD_ENCODED_CREDS} >> ./config/credentials/production.yml.enc
       - run:
           command: |
             if [ ! -f ./config/credentials/staging.yml.enc ]
             then
-              touch ./config/credentials/staging.yml.enc
+              mkdir ./config/credentials && touch ./config/credentials/staging.yml.enc
             fi
             echo ${RAILS_STAGING_ENCODED_CREDS} >> ./config/credentials/staging.yml.enc
       - run:
