@@ -38,6 +38,7 @@ module V1
                   end
 
         if service.success?
+          UploadResourcesToStorageWorker.perform_async
           serialize resource, with: ResourceSerializer
         else
           forbidden_error!
