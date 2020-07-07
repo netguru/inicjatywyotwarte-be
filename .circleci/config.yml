@@ -159,8 +159,6 @@ jobs:
             echo IMAGE=${PROD_AWS_ECR_ACCOUNT_URL}/ecr-hackcrisis-production:${CIRCLE_SHA1} >> ./codedeploy-scripts/parameters
             echo ENV_PATH=${ENV_PATH} >> ./codedeploy-scripts/parameters
             echo REGION_FETCH_URL=${REGION_FETCH_URL} >> ./codedeploy-scripts/parameters
-            echo ${RAILS_PROD_ENCODED_CREDS} >> ./config/credentials/production.yml.enc
-            echo ${RAILS_STAGING_ENCODED_CREDS} >> ./config/credentials/staging.yml.enc
       - run:
           name: Use proper appspec.yml file
           command: mv appspec.yml.<< parameters.env >> appspec.yml
