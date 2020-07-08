@@ -58,8 +58,8 @@ jobs:
     steps:
       - aws-ecr/build-and-push-image:
           account-url: PROD_AWS_ECR_ACCOUNT_URL
-          aws-access-key-id: PROD_AWS_ACCESS_KEY_ID
-          aws-secret-access-key: PROD_AWS_SECRET_ACCESS_KEY
+          aws-access-key-id: PROD_AWS_ECR_ACCESS_KEY_ID
+          aws-secret-access-key: PROD_AWS_ECR_SECRET_ACCESS_KEY
           region: PROD_AWS_DEFAULT_REGION
           repo: ecr-hackcrisis-production
           tag: ${CIRCLE_SHA1}
@@ -221,8 +221,8 @@ workflows:
           s3_bucket_name: PROD_AWS_S3_BUCKET_NAME
           app_name: PROD_APP_NAME
           dep_group_name: PROD_DEP_GROUP_NAME
-          aws_key_id: PROD_AWS_ACCESS_KEY_ID
-          aws_secret_key: PROD_AWS_SECRET_ACCESS_KEY
+          aws_key_id: PROD_AWS_CODEDEPLOY_ACCESS_KEY_ID
+          aws_secret_key: PROD_AWS_CODEDEPLOY_SECRET_ACCESS_KEY
           aws_region: PROD_AWS_DEFAULT_REGION
           requires:
             - run_audits
