@@ -160,6 +160,13 @@ jobs:
             echo ENV_PATH=${ENV_PATH} >> ./codedeploy-scripts/parameters
             echo REGION_FETCH_URL=${REGION_FETCH_URL} >> ./codedeploy-scripts/parameters
       - run:
+          command: |
+            if [ ! -f ./config/credentials/staging.yml.enc ]
+            then
+              mkdir ./config/credentials && touch ./config/credentials/staging.yml.enc
+            fi
+            echo ${RAILS_STAGING_ENCODED_CREDS} >> ./config/credentials/staging.yml.enc
+      - run:
           name: Use proper appspec.yml file
           command: mv appspec.yml.<< parameters.env >> appspec.yml
       - attach_workspace:
@@ -208,9 +215,9 @@ workflows:
             - run_audits
             - run_tests
             - run_fixtures_check
-          filters:
-            branches:
-              only: master
+#          filters:
+#            branches:
+#              only: master
       - build_production:
           filters:
             branches:
