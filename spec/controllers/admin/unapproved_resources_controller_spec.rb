@@ -8,30 +8,24 @@ RSpec.describe Admin::UnapprovedResourcesController, type: :controller do
   before { sign_in logged_in_admin_user }
 
   describe 'GET index' do
-    let!(:resources) { FactoryBot.create_list(:resource, 5) }
+    before do
+      FactoryBot.create_list(:resource, 5)
+    end
 
     render_views
 
-    shared_examples 'renders index' do
-      it 'renders without errors' do
-        get :index
-        expect(response).to be_successful
-        assert_select 'table.index tbody' do |trs|
-          trs.each_with_index do |element, i|
-            assert_select element, 'td.col-name', resources[i].name
-            assert_select element, 'td.col-description', resources[i].description
-          end
-        end
-      end
-    end
-
-    context 'when user is super_admin' do
-      include_examples 'renders index'
+    it 'renders without errors' do
+      get :index
+      expect(response).to be_successful
     end
 
     context 'when user is not super_admin' do
       let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
-      include_examples 'renders index'
+
+      it 'renders' do
+        get :index
+        expect(response).to be_successful
+      end
     end
   end
 
@@ -41,22 +35,18 @@ RSpec.describe Admin::UnapprovedResourcesController, type: :controller do
     context 'when rendered' do
       render_views
 
-      shared_examples 'renders show' do
-        it 'renders without errors' do
-          get :show, params: { id: resource.id }
-          expect(response).to be_successful
-          assert_select 'tr.row.row-name td', resource.name
-          assert_select 'tr.row.row-description td', resource.description
-        end
+      it 'renders without errors' do
+        get :show, params: { id: resource.id }
+        expect(response).to be_successful
       end
+    end
 
-      context 'when user is super_admin' do
-        include_examples 'renders show'
-      end
+    context 'when user is not super_admin' do
+      let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
 
-      context 'when user is not super_admin' do
-        let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
-        include_examples 'renders show'
+      it 'renders' do
+        get :show, params: { id: resource.id }
+        expect(response).to be_successful
       end
     end
   end
@@ -64,47 +54,33 @@ RSpec.describe Admin::UnapprovedResourcesController, type: :controller do
   describe 'GET edit' do
     let!(:resource) { FactoryBot.create(:resource) }
 
-    context 'when rendered' do
-      render_views
+    it 'renders without errors' do
+      get :edit, params: { id: resource.id }
+      expect(response).to be_successful
+    end
 
-      shared_examples 'renders edit' do
-        it 'renders without errors' do
-          get :edit, params: { id: resource.id }
-          expect(response).to be_successful
-          assert_select 'textarea#resource_description', resource.description
-        end
-      end
+    context 'when user is not super_admin' do
+      let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
 
-      context 'when user is super_admin' do
-        include_examples 'renders edit'
-      end
-
-      context 'when user is not super_admin' do
-        let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
-        include_examples 'renders edit'
+      it 'renders' do
+        get :edit, params: { id: resource.id }
+        expect(response).to be_successful
       end
     end
   end
 
   describe 'GET new' do
-    shared_examples 'renders new' do
-      it 'renders without errors' do
-        get :new
-        expect(response).to be_successful
-        assert_select 'textarea#resource_description', ''
-      end
+    it 'renders without errors' do
+      get :new
+      expect(response).to be_successful
     end
 
-    context 'when rendered' do
-      render_views
+    context 'when user is not super_admin' do
+      let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
 
-      context 'when user is super_admin' do
-        include_examples 'renders new'
-      end
-
-      context 'when user is not super_admin' do
-        let(:logged_in_admin_user) { FactoryBot.create(:admin_user, :super_reviewer) }
-        include_examples 'renders new'
+      it 'renders' do
+        get :new
+        expect(response).to be_successful
       end
     end
   end
