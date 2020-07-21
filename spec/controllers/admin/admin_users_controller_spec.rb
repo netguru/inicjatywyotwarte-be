@@ -8,15 +8,18 @@ RSpec.describe Admin::AdminUsersController, type: :controller do
   before { sign_in logged_in_admin_user }
 
   describe 'GET index' do
-    before do
-      FactoryBot.create_list(:admin_user, 5)
-    end
+    let!(:admin_users) { FactoryBot.create_list(:admin_user, 5) }
 
     render_views
 
     it 'renders without errors' do
       get :index
       expect(response).to be_successful
+      assert_select 'table.index tbody' do |trs|
+        trs.each_with_index do |element, i|
+          assert_select element, 'td.col-email', admin_users[i].email
+        end
+      end
     end
 
     context 'when user is not super_admin' do
@@ -38,6 +41,7 @@ RSpec.describe Admin::AdminUsersController, type: :controller do
       it 'renders without errors' do
         get :show, params: { id: admin_user2.id }
         expect(response).to be_successful
+        assert_select 'tr.row.row-email td', admin_user2.email
       end
     end
 
@@ -54,9 +58,14 @@ RSpec.describe Admin::AdminUsersController, type: :controller do
   describe 'GET edit' do
     let!(:admin_user2) { FactoryBot.create(:admin_user) }
 
-    it 'renders without errors' do
-      get :edit, params: { id: admin_user2.id }
-      expect(response).to be_successful
+    context 'when rendered' do
+      render_views
+
+      it 'renders without errors' do
+        get :edit, params: { id: admin_user2.id }
+        expect(response).to be_successful
+        assert_select '#admin_user_email[value=?]', admin_user2.email
+      end
     end
 
     context 'when user is not super_admin' do
@@ -70,9 +79,14 @@ RSpec.describe Admin::AdminUsersController, type: :controller do
   end
 
   describe 'GET new' do
-    it 'renders without errors' do
-      get :new
-      expect(response).to be_successful
+    context 'when rendered' do
+      render_views
+
+      it 'renders without errors' do
+        get :new
+        expect(response).to be_successful
+        assert_select '#admin_user_email[value=?]', ''
+      end
     end
 
     context 'when user is not super_admin' do
