@@ -5,6 +5,9 @@ require 'rails_helper'
 RSpec.describe V1::Resources::Vote, type: :request do
   subject { patch endpoint, params: params }
 
+  before { allow_any_instance_of(Grape::Request).to receive(:ip).and_return(ip_address) }
+
+  let(:ip_address) { IPAddr.new(FFaker::Internet.ip_v4_address) }
   let(:endpoint) { "/api/v1/resources/#{resource_id}/vote" }
   let(:resource_id) { '999' } # non existent
   let(:params) { { value: vote_value } }
@@ -34,12 +37,9 @@ RSpec.describe V1::Resources::Vote, type: :request do
     before do
       allow(::Resources::Upvote).to receive(:new).and_return(upvote_service_double)
       allow(upvote_service_double).to receive(:call).and_return(upvote_service_double)
-      allow_any_instance_of(Grape::Request).to receive(:ip).and_return(ip_address)
     end
 
     let(:upvote_service_double) { double(:upvote_service, call: nil, success?: success) }
-
-    let(:ip_address) { IPAddr.new(FFaker::Internet.ip_v4_address) }
     let(:vote_value) { 1 }
     let(:resource) { FactoryBot.create(:resource, :approved) }
     let(:resource_id) { resource.id }
@@ -68,7 +68,6 @@ RSpec.describe V1::Resources::Vote, type: :request do
     before do
       allow(::Resources::RevokeUpvote).to receive(:new).and_return(revoke_upvote_service_double)
       allow(revoke_upvote_service_double).to receive(:call).and_return(revoke_upvote_service_double)
-      allow_any_instance_of(Grape::Request).to receive(:ip).and_return(ip_address)
     end
 
     let(:revoke_upvote_service_double) { double(:revoke_upvote_service, call: nil, success?: success) }
