@@ -95,5 +95,4 @@ RSpec.describe V1::Resources::Vote, type: :request do
       end
     end
   end
-
 end
