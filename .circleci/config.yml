@@ -5,6 +5,7 @@ orbs:
   aws-code-deploy: circleci/aws-code-deploy@0.0.9
   aws-s3: circleci/aws-s3@1.0.15
   aws-ecr: circleci/aws-ecr@6.8.2
+  tools: netguru/tools@dev:internal
 
 executors:
   ruby_machine:
@@ -52,6 +53,15 @@ jobs:
           root: ~/repo
           paths:
             - vendor/bundle
+
+  trivy_test:
+    docker:
+      - image: alpine
+    working_directory: ~/repo
+    steps:
+      - attach_workspace:
+          at: ~/repo
+      - tools/trivy-jira
 
   build_production:
     executor: ruby_machine
@@ -186,6 +196,9 @@ workflows:
       - build_rails_dependencies:
           requires:
             - checkout_code
+      - trivy_test:
+          requires:
+            - checkout_code
       - run_audits:
           requires:
             - build_rails_dependencies
@@ -208,6 +221,7 @@ workflows:
             - run_audits
             - run_tests
             - run_fixtures_check
+            - trivy_test
           filters:
             branches:
               only: master
@@ -229,6 +243,7 @@ workflows:
             - run_tests
             - run_fixtures_check
             - build_production
+            - trivy_test
           filters:
             branches:
               only: production

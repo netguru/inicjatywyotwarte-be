@@ -1,0 +1,5 @@
+# List of false-positives in Gemfile.lock
+# See this bug report: https://github.com/aquasecurity/trivy/issues/282
+
+# Installed sprockets 4.0.2
+CVE-2014-7819
