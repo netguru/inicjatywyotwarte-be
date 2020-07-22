@@ -5,7 +5,7 @@
 
 The application is an aggregator of initiatives useful during COVID-19 times and not only. Guests can propose new initiatives from the website, which will then be reviewed by moderators. A user can also upvote initiatives with 'Pomocne' if it was helpful.
 
-- This application is the backend API service for a frontend [React application](https://github.com/netguru/quarantine-helper-fe)
+- This application is the backend API service for a frontend [React application](https://github.com/netguru/inicjatywyotwarte-fe)
 - Its main component is the admin panel for initiative moderators.
 - In the first phase the application was serving initiatives via Grape endpoints, then there was decision made to store the whole JSON with all initiatives on S3 bucket. Crono scheduler periodically regenerates this JSON to update upvotes count. Workers are enqueued whenever admin/reviewer makes change to an initiative in the admin panel. Right now, we're using the endpoint only for upvoting purpose and initiative creation. (The location is validated using GMP Geocoding) 
 
